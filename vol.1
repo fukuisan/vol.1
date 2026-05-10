@@ -1,0 +1,33 @@
+import pandas as pd
+import os
+from tabulate import tabulate
+
+# --- 前半の処理（変更なし） ---
+path = os.path.expanduser('~/Desktop/training.csv')
+df = pd.read_csv(path)
+
+group_index = pd.Series(range(len(df))) // 3
+
+df_processed = df.groupby(group_index).agg({
+    df.columns[4]: 'mean',
+    df.columns[1]: 'first',
+    df.columns[10]: 'first'
+})
+
+df_final = df_processed[[df.columns[1], df.columns[4], df.columns[10]]].copy()
+df_final.columns = ['B列相当', 'E列相当(平均)', 'K列相当']
+
+# --- 出力部分の修正（Excel風） ---
+
+# 1. 列ヘッダーにExcel風の「A, B, C...」を追加
+excel_columns = ["A", "B", "C"]
+df_final.columns = [f"{col}\n({name})" for col, name in zip(excel_columns, df_final.columns)]
+
+# 2. インデックスを1から始まる行番号に変更
+df_final.index = df_final.index + 1
+
+print("--- Excel風の出力結果 ---")
+
+# tablefmt="fancy_grid" を使うと罫線がより綺麗（二重線など）になります
+# showindex=True で行番号を表示します
+print(tabulate(df_final.head(), headers='keys', tablefmt='fancy_grid', showindex=True))
